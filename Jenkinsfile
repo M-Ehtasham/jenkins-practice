@@ -2,13 +2,19 @@ pipeline {
     agent any
     
     stages {
-        stage('Clone and Build') {
+        stage('Clean and Clone') {
             steps {
-                git 'https://github.com/M-Ehtasham/jenkins-practice.git'
-                
+                cleanWs()
+                git branch: 'main', 
+                url: 'https://github.com/M-Ehtasham/jenkins-practice.git'
+            }
+        }
+        
+        stage('Build Image') {
+            steps {
                 script {
-                    // Build Docker image
-                    docker.build('jenkins-practice:latest')
+                    // Simple build without credentials first
+                    sh 'docker build -t jenkins-practice:latest .'
                 }
             }
         }
@@ -16,20 +22,23 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Stop old container if running
-                    sh 'docker stop jenkins-practice-app || true'
-                    sh 'docker rm jenkins-practice-app || true'
-                    
-                    // Run new container
-                    sh 'docker run -d -p 8080:80 --name jenkins-practice-app jenkins-practice:latest'
+                    sh '''
+                        docker stop practice-app || true
+                        docker rm practice-app || true
+                        docker run -d -p 8080:80 --name practice-app jenkins-practice:latest
+                    '''
                 }
             }
         }
-    }
-    
-    post {
-        always {
-            echo 'Pipeline execution completed'
+        
+        stage('Verify') {
+            steps {
+                script {
+                    sh 'sleep 5'
+                    sh 'curl -s http://localhost:8080 | head -n 5'
+                    echo "✅ Deployment verified!"
+                }
+            }
         }
     }
 }
