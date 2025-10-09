@@ -42,7 +42,7 @@ pipeline {
                 script {
                     echo "Pushing image to Docker Hub..."
                     // Use the credentials ID you set up earlier (probably 'docker-hub')
-                    docker.withRegistry('', 'docker-hub') {
+                    docker.withRegistry('', 'docker-hub-credentials') {
                         docker.image("${DOCKER_IMAGE}").push()
                         
                         // Also push as 'latest'
